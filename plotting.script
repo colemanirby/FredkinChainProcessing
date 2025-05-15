@@ -1,0 +1,73 @@
+set logscale
+
+ 
+
+c1=0.005
+
+z1=3.16
+
+ 
+
+Nlow=50 # lower cutoff size for the fits
+
+ 
+
+f1(x) = c1*x**(1+z1)
+
+fit[Nlow:] f1(x) "per_N_pivot.txt" u 2:($1==1 ? $3 : 1/0):5 via c1,z1
+
+plot "per_N_pivot.txt" u 2:($1==1 ? $3 : 1/0) title "", f1(x) title "S=1"
+
+pause -1
+
+ 
+
+c2=c1
+
+z2=z1
+
+f2(x) = c2*x**(1+z2)
+
+fit[Nlow:] f2(x) "per_N_pivot.txt" u 2:($1==2 ? $3 : 1/0):5 via c2,z2
+
+plot "per_N_pivot.txt" u 2:($1==2 ? $3 : 1/0) title "", f2(x) title "S=2"
+
+pause -1
+
+ 
+
+c3=c2
+
+z3=z2
+
+f3(x) = c3*x**(1+z3)
+
+fit[Nlow:] f3(x) "per_N_pivot.txt" u 2:($1==3 ? $3 : 1/0):5 via c3,z3
+
+plot "per_N_pivot.txt" u 2:($1==3 ? $3 : 1/0) title "", f3(x) title "S=3"
+
+pause -1
+
+ 
+
+c4=c3
+
+z4=z3
+
+f4(x) = c4*x**(1+z4)
+
+fit[Nlow:] f4(x) "per_N_pivot.txt" u 2:($1==4 ? $3 : 1/0):5 via c4,z4
+
+plot "per_N_pivot.txt" u 2:($1==4 ? $4 : 1/0) title "", f4(x) title "S=4"
+
+pause -1
+
+ 
+
+plot for [s in "0 1 2 3 4"] "per_N_pivot.txt" u 2:($1==(s+0) ? $3 : 1/0) title "", f1(x), f2(x), f3(x), f4(x)
+
+pause -1
+
+ 
+
+plot[1:1000] for [s in "0 1 2 3 4 5 6 7 8 9 10 11 12 13"] "per_N_pivot.txt" u 2:($1==(s+0) ? (s*(s+1))**2.0*($3-0.5*$2): 1/0) w l title "", (1/pi**3)*x**(1 + 3 + 1.0/(2*pi))

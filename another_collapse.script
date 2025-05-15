@@ -1,0 +1,29 @@
+unset key
+
+set logscale
+
+z=3.16
+
+Nmax=300
+
+Nmin=50
+
+a=0.5
+
+b=1.6
+
+c=0.4
+
+d=5.2
+
+plot[0.08:1+Nmax**(1.0/z)][:2] "per_N_pivot.txt" using ((2.*$1/($2-2))*$2**(1.0/z)+1.0*$2**(-a)):($2 > Nmin ? ($2-2)/$3 : 1/0) w p ls -1, c*x**d, 1, 1/(1+(1.0/c)**(1./b)*x**(-(d/b)))**b
+
+pause -1
+
+ 
+
+unset logscale
+
+replot
+
+pause -1
