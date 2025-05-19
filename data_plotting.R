@@ -906,8 +906,10 @@ plot <- ggplot(df_coeffs, aes(x = x, y = z_0)) +
       geom_point(size = 2) +
       annotate("segment", x=10, xend=10, y=0, yend = 3.8735261) +
       annotate("segment", x=0, xend=10, y=3.8735261, yend = 3.8735261) +
-      annotate("label", x = 15, y = 1, label = "z_0_max = 3.8735261") + 
-      annotate("")
+      annotate("label", x = 15, y = 1, label = "z_0_max = 3.8735261") +
+      annotate("segment", x = 1, xend = 1, y = 0, yend = 3.1688150) +
+      annotate("segment", x = 0, xend = 1, y=3.1688150, yend = 3.1688150) +
+      annotate("label", x = 5, y = 2, label = "z_0 = 3.168(8)")
 plot
 
 ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/z_0_labeled.jpg")
