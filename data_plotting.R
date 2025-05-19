@@ -8,6 +8,8 @@ install.packages("dplyr")
 install.packages("ggforce")
 install.packages("ggiraph")
 install.packages("ggpmisc")
+install.packages("investr")
+library(investr)
 library(ggiraph)
 library("dplyr")
 library("tidyr")
@@ -469,8 +471,8 @@ y <- log10(df$mean)
 x <- log10(df$chain_size)
 lmodel <- lm(y ~ x + I(x^2))
 # coefs <- coef(lmodel)
-### take derivative and find slope at x = 2.3 (deeper into asymptotic limit)
-z <- (2 * coef(lmodel)[3] * 2.3) + coef(lmodel)[2] - 1
+### take derivative and find slope at x = 2.477 ~ log_10(300) (deeper into asymptotic limit)
+z <- (2 * coef(lmodel)[3] * 2.477) + coef(lmodel)[2] - 1
 z_collection <- c(z_collection, z)
 }
 
@@ -582,3 +584,377 @@ x_0 <- 80
 f <- function(x) L/(1 + exp(-k*(x-x_0)))
 ggplot() + 
 geom_line(aes(x = x_values, y = f(x_values)))
+
+# More nuanced z dependence collection
+
+spin_sectors <- seq(from = 1, to = 80, by = 1)
+z_collection <- c()
+for (s in spin_sectors) {
+df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == s)
+y <- log10(df$mean)
+x <- log10(df$chain_size)
+lmodel <- lm(y ~ x + I(x^2))
+# coefs <- coef(lmodel)
+### take derivative and find slope at x = 2.477 ~ log_10(300) (deeper into asymptotic limit)
+z <- (2 * coef(lmodel)[3] * 2.477) + coef(lmodel)[2] - 1
+z_collection <- c(z_collection, z)
+}
+df <- data.frame(spin_sectors, z_collection)
+
+plot <- ggplot(df, aes(x = spin_sectors, y = z_collection)) +
+  geom_point(size = 1) +
+  scale_color_viridis_c() +
+  labs(title = "How z changes as a function of Spin Sector, Quadratic fits",
+       x = "s", y = "z") +
+  geom_line(aes(y = 3.533757), linetype = "dashed") +
+  annotate("label", x = 20, y = 3.45, label = "z ~ 3.534") +
+  geom_line(aes(y = 0.1369335), linetype = "dashed") +
+  annotate("label", x = 20, y = 0.2, label = "z ~ 0.137") +
+  geom_line(aes(y = 3.221026), linetype = "dashed") +
+  annotate("label", x = 20, y = 3.1, label = "z ~ 3.221") +
+  theme_minimal() + 
+  geom_line(aes(x = 6)) +
+  annotate("segment", x=6, xend=6, y=0, yend = 3.533757) +
+  annotate("label", x = 2, y = 1, label = "s = 6") + 
+  annotate("segment", x = 9, xend=9, y = 0, yend = 3.221) +
+  annotate("label", x = 13, y = 1, label = "s = 9")
+ggsave("Plots/z_derivative_deeper.jpg", plot=plot)
+
+z_values <- c()
+spin_sector <- seq(from=1, to=80, by=1)
+# df_z <- data.frame(x_axis )
+for (s in spin_sector) {
+  df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+  df <- df %>% filter(ss == s)
+
+  y <- log10(df$mean)
+  x <- log10(df$chain_size)
+  lmodel <- lm(y ~ x)
+  coefs <- coef(lmodel)
+  z <- coefs[2] - 1
+  z_values <- c(z_values, z)
+}
+
+df_z <- data.frame(spin_sector, z_values)
+y <- z_values
+x <- spin_sector
+lmodel <- lm( y ~ log(x))
+
+model <- nls (y ~ d + (a - d) / (1 + g *(x^b - 1)), start = list(a = 3.150103, b = 2.011552, g = 0.005315, d = 0.005317))
+alpha <- 3.150103
+beta <- 2.011552
+gamma <- 0.005315
+delta <- 0.034001
+f <- function(x) delta + ((alpha - delta) / (1 + gamma*(x^beta - 1)))
+x_range <- seq(from = 1, to = 80, by = 1)
+plot <- ggplot(df_z, aes(x = spin_sector, y = z_values)) +
+  geom_point(size = 2) +
+  scale_color_viridis_c() +
+  labs(title = "How z changes as a function of Spin Sector, Linear fits",
+       x = "ss", y = "z") +
+  theme_minimal() +
+  geom_line(aes(y = 3.188141), linetype = "dashed") +
+  annotate("label", x = 10, y = 3.148, label = "z ~ 3.188")+
+  geom_line(aes(y = 0.1216337), linetype = "dashed") +
+  annotate("label", x = 10, y = 0.2, label = "z ~ 0.122")+
+  geom_line(aes(y = f(x_range), x = x_range))+
+  geom_text(x = 60, y =2, label = expression(z(s) == delta + ((alpha - delta)/(1 + gamma*(x^beta -1)))), size = 7) +
+  geom_text(x = 60, y = 1.8, label = expression( alpha == 3.150103), size = 7) +
+  geom_text(x = 60, y = 1.6, label = expression( beta == 2.011552), size = 7) +
+  geom_text(x = 60, y = 1.4, label = expression( gamma == 0.005315), size = 7) +
+  geom_text(x = 60, y = 1.2, label = expression( delta == 0.034001), size = 7) 
+  plot
+ggsave("Plots/behavior_of_z_annotated.jpg", plot=plot)
+
+##Numerology plot
+f <- function(x) (pi/100) + (99*pi) / (100 + (x^2 - 1)/1.8)
+x_range <- seq(from = 1, to = 80, by = 1)
+plot <- ggplot(df_z, aes(x = spin_sector, y = z_values)) +
+  geom_point(size = 2) +
+  scale_color_viridis_c() +
+  labs(title = "How z changes as a function of Spin Sector, Linear fits",
+       x = "ss", y = "z") +
+  theme_minimal() +
+  geom_line(aes(y = 3.188141), linetype = "dashed") +
+  annotate("label", x = 10, y = 3.148, label = "z ~ 3.188")+
+  geom_line(aes(y = 0.1216337), linetype = "dashed") +
+  annotate("label", x = 10, y = 0.2, label = "z ~ 0.122")+
+  geom_text(x = 60, y = 2, label = expression(z(s) == pi/100 + (99*pi) / (100 + (s^2 - 1)/1.8)), size = 6)+
+  geom_line(aes(y = f(x_range), x = x_range))
+  plot
+  ggsave("Plots/behavior_of_z_numerology_2.jpg", plot=plot)
+
+z_0 = 3.19
+##Slightly more sceintific plot
+f <- function(x) (z_0/100) + (99*z_0) / (100 + (x^2)/1.8)
+x_range <- seq(from = 1, to = 80, by = 1)
+plot <- ggplot(df_z, aes(x = spin_sector, y = z_values)) +
+  geom_point(size = 2) +
+  scale_color_viridis_c() +
+  labs(title = "How z changes as a function of Spin Sector, Linear fits",
+       x = "ss", y = "z") +
+  theme_minimal() +
+  geom_line(aes(y = 3.188141), linetype = "dashed") +
+  annotate("label", x = 10, y = 3.148, label = "z ~ 3.188")+
+  geom_line(aes(y = 0.1216337), linetype = "dashed") +
+  annotate("label", x = 10, y = 0.2, label = "z ~ 0.122")+
+  geom_text(x = 60, y = 2, label = expression(z(s) == z_0/100 + (99*z_0) / (100 + (s^2)/1.8)), size = 6)+
+  geom_line(aes(y = f(x_range), x = x_range))
+  plot
+  ggsave("Plots/behavior_of_z_scientific.jpg", plot=plot)
+
+
+x_range <- seq(from = -80, to = 80, by = 1)
+
+plot <- ggplot(data.frame( x = x_range), aes(x = x)) +
+  stat_function(fun = f) +
+   geom_text(x = 60, y = 2, label = expression(z(s) == z_0/100 + (99*z_0) / (100 + (s^2)/1.8)), size = 6) +
+   annotate("label", x = 0, y = 0.5, label = "z_0 = 3.19")
+
+plot
+
+ggsave("Plots/mirrored_fit_function.jpg", plot=plot)
+
+################# Retry s fits using log(tau/N) = (z_0 + z_1/N)log(N) + log(c_0 + c_1/N)######################
+
+default_filename <- "Plots/Analysis/lifetime_s+_bestfit.jpg"
+default_title <- "Lifetime of Excited Bonds in s = + with Best Fit Line"
+spin_sector <- seq(from = 1, to = 149, by = 1)
+for (s in spin_sector) {
+  file_str <- gsub("+", toString(s), default_filename, fixed = TRUE)
+  plot_title <- gsub("+", toString(s), default_title, fixed = TRUE)
+  df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == s) %>%
+  filter(!is.na(mean))
+
+ratio <- df$mean / df$chain_size
+se_ratio <- df$err/df$chain_size
+se_log <- se_ratio/(log(10) * ratio)
+df$se_log <- se_log
+df$x <- log10(df$chain_size)
+df$y <- log10(ratio)
+# df$y_p <- log10((df$mean + df$err)/df$chain_size)
+# df$y_m <- log10((df$mean - df$err)/df$chain_size)
+bar_width <- 0.02 * diff(range(df$x))
+plot <- ggplot(df, aes(x = x, y = y)) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = y - se_log, ymax = y + se_log), width = bar_width) +
+  labs(title = plot_title,
+       x = expression(log(N)), y = expression(log(tau/N))) +
+  theme_minimal()
+ggsave(file_str, plot=plot)
+}
+
+df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df_1 <- df %>%
+  filter(ss == 1)
+
+y <- log10(df_1$mean/df_1$chain_size)
+x <- df_1$chain_size
+lin_model <- lm(y~log10(x))
+
+z_0 <- 3.188
+c_0 <- 0.0052
+x_range <- seq(from = 4, to = 300, by = 2)
+f <- function (x) log10(c_0) + z_0*log10(x) 
+plot <- ggplot(df_1, aes(x = log10(chain_size), y = log10(mean/chain_size))) +
+geom_point(size = 2) +
+geom_line(aes(y = f(x_range), x = log10(x_range)))
+plot
+
+
+
+df_2 <- df %>%
+  filter(ss == 3) %>%
+  filter(!is.na(mean))
+y <- log10(df_2$mean/df_2$chain_size)
+x <- df_2$chain_size
+
+# z_0 <- 3.188
+# c_0 <- 0.0015
+kick_off_model <- lm(y~log10(x))
+ratio <- df_2$mean / df_2$chain_size
+se_ratio <- df_2$err/df_2$chain_size
+se_log <- se_ratio/(log(10) * ratio)
+non_lin_model <- nls(y ~ (z_0 + z_1/x)*log10(x) + log10(c_0 + c_1/x), algorithm = "port", lower = c(c_1 = 0, z_1 = -100, z_0 = -100, c_0 = 0),start = list(c_1 = 2.793e-3, z_1 = 1.828, z_0 = 3.304, c_0 = 4.386e-4))
+
+
+
+#### An Introduction to Error Analysis: The Study of Uncertainties in Physical Measurements John R. Taylor
+#### https://www.nist.gov/pml/nist-technical-note-1297
+#### https://physics.stackexchange.com/questions/619143/error-propagation-with-log-base-10
+se_ratio <- df_2$err/df_2$chain_size
+ratio <- df_2$mean/df_2$chain_size
+
+se_log <- se_ratio/(log(10)*ratio)
+df_2$se_log <- se_log
+x_range <- seq(from = 8, to = 300, by = 2)
+df_2$x_range <- x_range
+f <- function(x) (z_0 + z_1/x)*log10(x) + log10(c_0 + c_1/x)
+z_0 <- 3.428
+c_0 <- 5.407e-5
+z_1 <- 6.463
+c_1 <- 3.538e-4
+plot<- ggplot(df_2, aes(x = log10(chain_size), y = log10(mean/chain_size))) +
+geom_point(size = 2) +
+geom_errorbar(aes(ymin = y - se_log, ymax = y + se_log), width = 0.01)+
+geom_line(aes(y = f(x_range), x = log10(x_range)))
+plot
+
+z_0 <- 3.099
+c_0 <- 0.0014
+c_1 <- 0.01
+z_1 <- -1
+default_filename <- "Plots/Analysis/lifetime_s+_non_linear.jpg"
+default_title <- "Lifetime of Excited Bonds in s = + with Best Fit Line"
+spin_sector <- seq(from = 2, to = 50, by = 1)
+c_0_coll <- c(0.0059996143)
+c_1_coll <- c(0.02861064)
+z_0_coll <- c(3.168815)
+z_1_coll <- c(-2.114317)
+for (s in spin_sector) {
+  file_str <- gsub("+", toString(s), default_filename, fixed = TRUE)
+  plot_title <- gsub("+", toString(s), default_title, fixed = TRUE)
+  df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == s) %>%
+  filter(!is.na(mean))
+
+
+
+ratio <- df$mean / df$chain_size
+se_ratio <- df$err/df$chain_size
+se_log <- se_ratio/(log(10) * ratio)
+df$se_log <- se_log
+df$x <- df$chain_size
+df$y <- log10(ratio)
+# y <- df$y
+# x <- df$x
+# df$y_p <- log10((df$mean + df$err)/df$chain_size)
+# df$y_m <- log10((df$mean - df$err)/df$chain_size)
+
+x_range <- seq(from = 2*(s+1), to = 300, by = 2)
+non_lin_model <- nls(data = df, y ~ (z_0 + z_1/chain_size)*log10(chain_size) + log10(c_0 + c_1/chain_size),  algorithm = "port", lower = c(c_1 = 0, z_1 = -100, c_0 = 0, z_0 = -100), start = list(c_1 = c_1, z_1 = z_1, c_0 = c_0, z_0 = z_0), control = nls.control(maxiter = 500, warnOnly = TRUE))
+c_1 <- coef(non_lin_model)["c_1"]
+z_1 <- coef(non_lin_model)["z_1"]
+c_0 <- coef(non_lin_model)["c_0"]
+z_0 <- coef(non_lin_model)["z_0"]
+
+c_1_coll <- c(c_1_coll, c_1)
+c_0_coll <- c(c_0_coll , c_0)
+z_1_coll <- c(z_1_coll, z_1)
+z_0_coll <- c(z_0_coll, z_0)
+
+
+  print("#############")
+  print(s)
+  print(c_1)
+  print(z_1)
+  print(z_0)
+  print(c_0)
+  print("#############")
+f <- function(x) (z_0 + z_1/x)*log10(x) + log10(c_0 + c_1/x)
+bar_width <- 0.02 * diff(range(log10(df$x)))
+plot <- ggplot(df, aes(x = log10(x), y = y)) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = y - se_log, ymax = y + se_log), width = bar_width) +
+  labs(title = plot_title,
+       x = expression(log(N)), y = expression(log(tau/N))) +
+  theme_minimal() +
+  geom_line(aes(y = f(x_range), x = log10(x_range)))
+
+ggsave(file_str, plot=plot)
+}
+df_coeffs <- data.frame(c_1 = c_1_coll, c_0 = c_0_coll, z_1 = z_1_coll, z_0 = z_0_coll)
+df_coeffs$x <- seq(from = 1, to = 50, by = 1)
+plot <- ggplot(df_coeffs, aes(x = x, y = z_0)) +
+      geom_point(size = 2)
+ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/z_0.jpg")
+plot <- ggplot(df_coeffs, aes(x = x, y = z_1)) +
+      geom_point(size = 2)
+ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/z_1.jpg")
+plot <- ggplot(df_coeffs, aes(x = x, y = c_0)) +
+      geom_point(size = 2)
+ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/c_0.jpg")
+plot <- ggplot(df_coeffs, aes(x = x, y = c_1)) +
+      geom_point(size = 2)
+ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/c_1.jpg")
+
+plot <- ggplot(df_coeffs, aes(x = x)) +
+  geom_point(aes(y = z_1), color = "red") +
+  geom_point(aes(y = z_0), color = "blue") +
+  labs(y = "z_1(red) and z_0(blue)", x = "spin sector")
+ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/z_1_z_0.jpg")
+plot
+
+plot <- ggplot(df_coeffs, aes(x = x)) +
+  geom_point(aes(y = c_1), color = "red") +
+  geom_point(aes(y = c_0), color = "blue") +
+  labs(y = "c_1(red) and c_0(blue)", x = "spin sector")
+plot
+ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/c_1_c_0.jpg")
+
+plot <- ggplot(df_coeffs, aes(x = x, y = z_0)) +
+      geom_point(size = 2) +
+      annotate("segment", x=10, xend=10, y=0, yend = 3.8735261) +
+      annotate("segment", x=0, xend=10, y=3.8735261, yend = 3.8735261) +
+      annotate("label", x = 15, y = 1, label = "z_0_max = 3.8735261") + 
+      annotate("")
+plot
+
+ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/z_0_labeled.jpg")
+
+
+##########################################################################
+
+# interval <- as_tibble(predFit(non_lin_model, newdata = x_range, interval = "confidence", level = 0.9)) %>%
+#   mutate(x = x_range)
+
+interval <- confint(non_lin_model , level = 0.9)
+
+default_filename <- "Plots/Analysis/Errors/error_distributions_ss_+.jpg"
+default_title <- "error idstributions in s = +"
+for (s in spin_sector) {
+  file_str <- gsub("+", toString(s), default_filename, fixed = TRUE)
+  plot_title <- gsub("+", toString(s), default_title, fixed = TRUE)
+  df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == s) %>%
+  filter(!is.na(mean))
+
+plot <- ggplot(df, aes(x = chain_size, y = 100*(err/mean))) +
+  geom_point(size = 3) +
+  scale_color_viridis_c() +
+  labs(title = plot_title,
+       x = "chain_size", y = expression(error/mean)) +
+  theme_minimal()
+ggsave(file_str, plot=plot)
+}
+
+default_filename <- "Plots/Analysis/Errors/standard_dev_ss_+.jpg"
+default_title <- "standard deviations in s = +"
+for (s in spin_sector) {
+  file_str <- gsub("+", toString(s), default_filename, fixed = TRUE)
+  plot_title <- gsub("+", toString(s), default_title, fixed = TRUE)
+  df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == s) %>%
+  filter(!is.na(mean))
+plot <- ggplot(df, aes(x = chain_size, y = 100*(dev/mean))) +
+  geom_point(size = 3) +
+  scale_color_viridis_c() +
+  labs(title = plot_title,
+       x = "chain_size", y = expression(sigma/mean)) +
+  theme_minimal()
+ggsave(file_str, plot=plot)
+}
