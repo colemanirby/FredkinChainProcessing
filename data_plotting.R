@@ -922,8 +922,9 @@ ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/z_0_labeled.jpg")
 
 interval <- confint(non_lin_model , level = 0.9)
 
-default_filename <- "Plots/Analysis/Errors/error_distributions_ss_+.jpg"
-default_title <- "error idstributions in s = +"
+default_filename <- "Plots/Analysis/DeviationsAndErrors/error_percentages_per_N_ss_+.jpg"
+default_title <- "errors as % of mean in s = +"
+spin_sector <- seq(from = 1, to = 149, by = 1)
 for (s in spin_sector) {
   file_str <- gsub("+", toString(s), default_filename, fixed = TRUE)
   plot_title <- gsub("+", toString(s), default_title, fixed = TRUE)
@@ -933,11 +934,12 @@ df <- df %>%
   filter(ss == s) %>%
   filter(!is.na(mean))
 
-plot <- ggplot(df, aes(x = chain_size, y = 100*(err/mean))) +
+
+plot <- ggplot(df, aes(x = chain_size, y = 100*(err/(chain_size*mean)))) +
   geom_point(size = 3) +
   scale_color_viridis_c() +
   labs(title = plot_title,
-       x = "chain_size", y = expression(error/mean)) +
+       x = "chain_size", y = expression(error/(chain_size * mean))) +
   theme_minimal()
 ggsave(file_str, plot=plot)
 }
