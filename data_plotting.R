@@ -922,27 +922,29 @@ ggsave(plot = plot, "Plots/Analysis/CoeffsPlots/z_0_labeled.jpg")
 
 interval <- confint(non_lin_model , level = 0.9)
 
-default_filename <- "Plots/Analysis/DeviationsAndErrors/error_percentages_per_N_ss_+.jpg"
-default_title <- "errors as % of mean in s = +"
-spin_sector <- seq(from = 1, to = 149, by = 1)
-for (s in spin_sector) {
-  file_str <- gsub("+", toString(s), default_filename, fixed = TRUE)
-  plot_title <- gsub("+", toString(s), default_title, fixed = TRUE)
-  df <- read.table(file = "per_N_pivot.txt",
-                 sep = "\t", header = TRUE)
-df <- df %>%
-  filter(ss == s) %>%
-  filter(!is.na(mean))
+# default_filename <- "Plots/Analysis/DeviationsAndErrors/error_percentages_per_N_ss_+.jpg"
+# default_title <- "errors as % of mean in s = +"
+# spin_sector <- seq(from = 1, to = 149, by = 1)
+# for (s in spin_sector) {
+#   file_str <- gsub("+", toString(s), default_filename, fixed = TRUE)
+#   plot_title <- gsub("+", toString(s), default_title, fixed = TRUE)
+#   df <- read.table(file = "per_N_pivot.txt",
+#                  sep = "\t", header = TRUE)
+# df <- df %>%
+#   filter(ss == s) %>%
+#   filter(!is.na(mean))
 
+# df$mean_scaled <- df$mean/df$chain_size
+# df$err_scaled <- df$err/df$chain_size
 
-plot <- ggplot(df, aes(x = chain_size, y = 100*(err/(chain_size*mean)))) +
-  geom_point(size = 3) +
-  scale_color_viridis_c() +
-  labs(title = plot_title,
-       x = "chain_size", y = expression(error/(chain_size * mean))) +
-  theme_minimal()
-ggsave(file_str, plot=plot)
-}
+# plot <- ggplot(df, aes(x = chain_size, y = 100*err_scaled/mean_scaled)) +
+#   geom_point(size = 3) +
+#   scale_color_viridis_c() +
+#   labs(title = plot_title,
+#        x = "chain_size", y = expression(error/(chain_size * mean))) +
+#   theme_minimal()
+# ggsave(file_str, plot=plot)
+# }
 
 default_filename <- "Plots/Analysis/Errors/standard_dev_ss_+.jpg"
 default_title <- "standard deviations in s = +"
@@ -962,3 +964,98 @@ plot <- ggplot(df, aes(x = chain_size, y = 100*(dev/mean))) +
   theme_minimal()
 ggsave(file_str, plot=plot)
 }
+
+df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+
+df <- df %>%
+  filter(ss == 13) %>%
+  filter(!is.na(mean))
+plot <- ggplot(df, aes(x = chain_size, y = mean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - err, ymax = mean + err))
+
+plot
+
+ggsave(filename = "mean_vs_N_ss13.jpg", plot = plot)
+
+df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+
+df <- df %>%
+  filter(ss == 13) %>%
+  filter(!is.na(mean))
+df$err_scaled <- df$err/df$chain_size
+df$mean_scaled <- df$mean/df$chain_size
+plot <- ggplot(df, aes(x = chain_size, y = mean_scaled)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_scaled - err_scaled, ymax = mean_scaled + err_scaled))
+
+plot
+
+ggsave(filename = "mean_vs_N_ss13_scaled.jpg", plot = plot)
+
+df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == 28) %>%
+  filter(!is.na(mean))
+plot <- ggplot(df, aes(x = chain_size, y = mean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - err, ymax = mean + err)) 
+
+plot
+
+ggsave(filename = "mean_vs_N_ss28.jpg", plot = plot)
+
+df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == 33) %>%
+  filter(!is.na(mean))
+plot <- ggplot(df, aes(x = chain_size, y = mean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - err, ymax = mean + err))
+
+plot
+
+ggsave(filename = "mean_vs_N_ss33.jpg", plot = plot)
+
+df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == 1) %>%
+  filter(!is.na(mean))
+plot <- ggplot(df, aes(x = chain_size, y = mean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - err, ymax = mean + err))
+
+plot
+
+ggsave(filename = "mean_vs_N_ss1.jpg", plot = plot)
+
+df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == 2) %>%
+  filter(!is.na(mean))
+plot <- ggplot(df, aes(x = chain_size, y = mean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - err, ymax = mean + err))
+
+plot
+
+ggsave(filename = "mean_vs_N_ss2.jpg", plot = plot)
+
+df <- read.table(file = "per_N_pivot.txt",
+                 sep = "\t", header = TRUE)
+df <- df %>%
+  filter(ss == 48) %>%
+  filter(!is.na(mean))
+plot <- ggplot(df, aes(x = chain_size, y = mean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean - err, ymax = mean + err))
+
+plot
+
+ggsave(filename = "mean_vs_N_ss48.jpg", plot = plot)
